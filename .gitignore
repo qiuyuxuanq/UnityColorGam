@@ -1,0 +1,15 @@
+[LFS]
+[Libraries]
+[Libraries for Unity]
+Temp/
+Library/
+Logs/
+Obj/
+MemoryCaptures/
+Build/
+Builds/
+*.csproj
+*.sln
+*.user
+.vscode/
+.idea/
