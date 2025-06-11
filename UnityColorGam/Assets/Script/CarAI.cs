@@ -21,38 +21,38 @@ public class Car : MonoBehaviour
         }
     }
 
-    // void OnTriggerStay(Collider other)
-    // {
-    //     if (other.CompareTag("TrafficLight"))
-    //     {
-    //         var lightCtrl = other.GetComponent<TrafficLightController>();
-    //         if (lightCtrl != null)
-    //         {
-    //             stoppedByLight = !lightCtrl.CanGoStright();
-    //         }
-    //     }
-    // }
-    // void OnTriggerExit(Collider other)
-    // {
-    //     if (other.CompareTag("TrafficLight"))
-    //     {
-    //         stoppedByLight = false;
-    //     }
-    // }
+    void OnTriggerStay(Collider other)
+    {
+        if (other.CompareTag("TrafficLight"))
+        {
+            var lightCtrl = other.GetComponent<TrafficLightController>();
+            if (lightCtrl != null)
+            {
+                // stoppedByLight = !lightCtrl.CanGoStright();
+            }
+        }
+    }
+    void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("TrafficLight"))
+        {
+            stoppedByLight = false;
+        }
+    }
 
-    // void FixedUpdate()
-    // {
-    //     RaycastHit hit;
-    //     if (Physics.Raycast(transform.position, transform.forward, out hit, StopDistance))
-    //     {
-    //         if (hit.collider.CompareTag("Car"))
-    //         {
-    //             stoppedByCar = true;
-    //             return;
-    //         }
-    //     }
-    //     stoppedByCar = false;
-    // }
+    void FixedUpdate()
+    {
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position, transform.forward, out hit, StopDistance))
+        {
+            if (hit.collider.CompareTag("Car"))
+            {
+                stoppedByCar = true;
+                return;
+            }
+        }
+        stoppedByCar = false;
+    }
 
     void OnTriggerEnter(Collider other)
     {
