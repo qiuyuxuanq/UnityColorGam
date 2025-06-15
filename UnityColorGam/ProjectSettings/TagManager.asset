@@ -7,6 +7,7 @@ TagManager:
   - Board
   - Car
   - TrafficLight
+  - IntersectionZone
   layers:
   - Default
   - TransparentFX

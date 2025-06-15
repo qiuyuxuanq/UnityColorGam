@@ -1,45 +1,38 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+
+public enum CarDirection { North, South, East, West }
 
 public class Car : MonoBehaviour
 {
-    public float MoveSpeed = 5f;
-    private float Score = 0f;
+    public float speed = 5f;
+    public CarDirection myDirection;
     public float CarValue = 10000f;
-
     public float StopDistance = 2f;
-    public bool stoppedByLight = false;
-    public bool stoppedByCar = false;
+    public TrafficLightController intersectionCtrl;
 
-    // Update is called once per frame
+    private bool stoppedByLight = false;
+    public bool stoppedByCar = false;
     void Update()
     {
         if (!stoppedByLight && !stoppedByCar)
         {
-            transform.Translate(Vector3.forward * MoveSpeed * Time.deltaTime);
+            transform.Translate(Vector3.forward * speed * Time.deltaTime);
         }
     }
 
     void OnTriggerStay(Collider other)
     {
-        if (other.CompareTag("TrafficLight"))
+        if (other.CompareTag("IntersectionZone") && intersectionCtrl != null)
         {
-            var lightCtrl = other.GetComponent<TrafficLightController>();
-            if (lightCtrl != null)
-            {
-                // stoppedByLight = !lightCtrl.CanGoStright();
-            }
-        }
-    }
-    void OnTriggerExit(Collider other)
-    {
-        if (other.CompareTag("TrafficLight"))
-        {
-            stoppedByLight = false;
-        }
-    }
+            string dir = myDirection.ToString();
+            bool canGo = intersectionCtrl.CanGo(dir);
 
+            // Debug 调试输出
+            Debug.Log($"🚗 {gameObject.name} @ {dir}: CanGo = {canGo}");
+
+            stoppedByLight = !canGo;
+        }
+    }
     void FixedUpdate()
     {
         RaycastHit hit;
@@ -54,15 +47,18 @@ public class Car : MonoBehaviour
         stoppedByCar = false;
     }
 
+    void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("IntersectionZone"))
+        {
+            stoppedByLight = false;
+        }
+    }
     void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Board"))
+        if (other.CompareTag("Board") && GameManager.Instance != null)
         {
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.AddScore(CarValue);
-            }
-
+            GameManager.Instance.AddScore(CarValue);
             Destroy(gameObject);
         }
     }

@@ -1,56 +1,131 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
+
+public enum LightState { Red, Yellow, Green }
 
 public class TrafficLightController : MonoBehaviour
 {
-    public enum LightState { Red, Green }
-    public LightState currentState = LightState.Red;
+    [Header("UI Prefab & Button")]
+    public GameObject controlUIPrefab;
+    public Button miniButton;
 
-    [Header("Mini TL1 Settings")]
-    public Button miniButton;            // Mini 红绿灯按钮（TL1）
+    [Header("Light Icons")]
     public Sprite redSprite;
+    public Sprite yellowSprite;
     public Sprite greenSprite;
 
-    [Header("Big Panel Settings")]
-    public GameObject controlUIPrefab;   // 放大红绿灯 UI Panel 预制体
     private GameObject currentUI;
+    private Dictionary<string, LightState> lightStates;
 
     void Start()
     {
-        // 设置 miniButton 的点击事件
-        miniButton.onClick.AddListener(OnMiniButtonClicked);
-        UpdateMiniVisual();
-    }
-
-    void UpdateMiniVisual()
-    {
-        // 更换 TL1 按钮的图标
-        Image img = miniButton.image;
-        img.sprite = (currentState == LightState.Red) ? redSprite : greenSprite;
-    }
-
-    public void ToggleState(LightState newState)
-    {
-        currentState = newState;
-        UpdateMiniVisual();
-    }
-
-    void OnMiniButtonClicked()
-    {
-        if (currentUI == null)
+        // 初始化灯状态，默认全部红灯
+        lightStates = new Dictionary<string, LightState>
         {
-            // 挂载到主 UI Canvas 下（请确保场景中有名为 "Canvas" 的 UI 根节点）
-            Transform canvas = GameObject.Find("Canvas").transform;
-            currentUI = Instantiate(controlUIPrefab, canvas);
+            { "North", LightState.Red },
+            { "South", LightState.Red },
+            { "East", LightState.Red },
+            { "West", LightState.Red }
+        };
 
-            // 绑定按钮事件
-            Button redBtn = currentUI.transform.Find("RedButton").GetComponent<Button>();
-            Button greenBtn = currentUI.transform.Find("GreenButton").GetComponent<Button>();
-            Button closeBtn = currentUI.transform.Find("CloseButton").GetComponent<Button>();
+        if (miniButton != null)
+        {
+            miniButton.onClick.AddListener(OnMiniButtonClicked);
+        }
+        else
+        {
+            Debug.LogWarning("❗ MiniButton 未设置！");
+        }
+    }
 
-            redBtn.onClick.AddListener(() => ToggleState(LightState.Red));
-            greenBtn.onClick.AddListener(() => ToggleState(LightState.Green));
-            closeBtn.onClick.AddListener(() => Destroy(currentUI));
+    public bool CanGo(string direction)
+    {
+        if (lightStates != null && lightStates.TryGetValue(direction, out LightState state))
+        {
+            Debug.Log($"🟢 [CanGo] {direction} = {state}");
+            return state == LightState.Green;
+        }
+        Debug.LogWarning($"❗ [CanGo] 未找到方向：{direction}");
+        return false;
+    }
+
+    public void SetLight(string direction, LightState state)
+    {
+        if (lightStates == null)
+        {
+            Debug.LogError("❗ lightStates 未初始化！");
+            return;
+        }
+
+        if (lightStates.ContainsKey(direction))
+        {
+            lightStates[direction] = state;
+            Debug.Log($"✅ [SetLight] {direction} → {state}");
+        }
+        else
+        {
+            Debug.LogWarning($"❗ SetLight：方向 {direction} 不存在");
+        }
+    }
+
+    public void OnMiniButtonClicked()
+    {
+        if (controlUIPrefab == null)
+        {
+            Debug.LogError("❗ controlUIPrefab 未设置！");
+            return;
+        }
+
+        if (currentUI != null)
+        {
+            Destroy(currentUI);
+            return;
+        }
+
+        Transform canvas = GameObject.Find("Canvas")?.transform;
+        if (canvas == null)
+        {
+            Debug.LogError("❗ Canvas 未找到！");
+            return;
+        }
+
+        currentUI = Instantiate(controlUIPrefab, canvas);
+        Debug.Log("📋 控制面板已创建");
+
+        string[] dirs = { "North", "South", "East", "West" };
+
+        foreach (string dir in dirs)
+        {
+            Button red = currentUI.transform.Find($"{dir}/Red")?.GetComponent<Button>();
+            Button yellow = currentUI.transform.Find($"{dir}/Yellow")?.GetComponent<Button>();
+            Button green = currentUI.transform.Find($"{dir}/Green")?.GetComponent<Button>();
+
+            if (red && yellow && green)
+            {
+                red.onClick.AddListener(() => SetLight(dir, LightState.Red));
+                yellow.onClick.AddListener(() => SetLight(dir, LightState.Yellow));
+                green.onClick.AddListener(() => SetLight(dir, LightState.Green));
+            }
+            else
+            {
+                Debug.LogWarning($"❗ 未找到 {dir} 的按钮");
+            }
+        }
+
+        Button closeBtn = currentUI.transform.Find("Close")?.GetComponent<Button>();
+        if (closeBtn != null)
+        {
+            closeBtn.onClick.AddListener(() =>
+            {
+                Destroy(currentUI);
+                currentUI = null;
+                Debug.Log("🧹 控制面板已关闭");
+            });
+        }
+        else
+        {
+            Debug.LogWarning("❗ Close 未找到");
         }
     }
 }
